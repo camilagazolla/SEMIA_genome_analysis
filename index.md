@@ -3,22 +3,25 @@
 ...
 
 
-### De novo Genome Assembly
+## De novo Genome Assembly
 ...
 
 ## Download of Public Genome Sequence Data
 
 Can consume 🐡
 
-- [File with GenBank release ID	accession numbers](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/batchentrez_list.txt) generated exporting ID Table (text) from search on [NCBI Assembly] (https://www.ncbi.nlm.nih.gov/assembly)
+- [File with GenBank release ID	accession numbers](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/batchentrez_list.txt) generated exporting ID Table (text) after search on [NCBI Assembly](https://www.ncbi.nlm.nih.gov/assembly)
 
 Can provide 🍣
 
 - Genome sequence files: Genomic FASTA (.fna), RNA from genomic FASTA (.fna), Genomic GenBank format (.gbff), etc.
+<br>
 
-On web browser, access: https://www.ncbi.nlm.nih.gov/sites/batchentrez
+**On web browser**
 
-### 16S rRNA gene analysis using SILVA SSU r138_2019
+Access: https://www.ncbi.nlm.nih.gov/sites/batchentrez
+
+## 16S rRNA gene analysis using SILVA SSU r138_2019
 
 Can consume 🐡
 
@@ -29,8 +32,9 @@ Can consume 🐡
 Can provide 🍣
 
 - [Table](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/16S_SILVA.tab) with taxonomic assignments from order to genus
+<br>
 
-On R:
+**On R:**
 
 ``` 
 library(DECIPHER) 
@@ -84,8 +88,10 @@ Can consume 🐡
 Can provide 🍣
 
 - [File](....) ...
+<br>
 
-On R:
+**On R:**
+
 
 ## ...
 
@@ -96,40 +102,6 @@ Can consume 🐡
 Can provide 🍣
 
 - [File](....) ...
+<br>
 
-On R:
-
-
-
-
-
-
-
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/camilagazolla/SEMIA_genome_analysis/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+**On R:**
