@@ -10,13 +10,13 @@
 
 Can consume 🐡
 
-- File with containing the 16S rRNA gene sequences extracted from genome assemblies (rna_from_genomic, on https://www.ncbi.nlm.nih.gov/assembly)
+- [File](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/16S_genomic_sequences.fasta) with containing the 16S rRNA gene sequences extracted from genome assemblies (rna_from_genomic, on https://www.ncbi.nlm.nih.gov/assembly)
 
-- TAB-delimited data with strain names and NCBI genome assembly_accession 
+- [TAB-delimited data](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/varnames.txt) with strain names and NCBI genome assembly_accession 
 
 Can provide 🍣
 
-- Table with taxonomic assignments from order to genus
+- [Table](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/16S_SILVA.tab) with taxonomic assignments from order to genus
 
 On R:
 
