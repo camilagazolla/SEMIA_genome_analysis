@@ -10,13 +10,13 @@
 
 Can consume 🐡
 
-- File with 16S rRNA gene sequences (.FASTA)
+- File with containing the 16S rRNA gene sequences (.FASTA) extracted from genome assemblies (rna_from_genomic, on https://www.ncbi.nlm.nih.gov/assembly)
 
 - TAB-delimited data with strain names and NCBI genome assembly_accession (.txt)
 
 Can provide 🍣
 
-- Table with taxonomic assignments from phylum to genus (.tab)
+- Table with taxonomic assignments from order to genus (.tab)
 
 On R:
 
@@ -24,7 +24,7 @@ On R:
 library(DECIPHER) 
 library(dada2)
 
-fas <- "~/cat16sall.fasta" # path to FASTA file
+fas <- "~/16S_genomic_sequences.fasta" # path to FASTA file
 fas <- readDNAStringSet(fas) # read
 fas <- OrientNucleotides(fas) # reorient sequences
 load("~/SILVA_SSU_r138_2019.RData") # path to SILVA_SSU_r138_2019.RData
@@ -56,7 +56,7 @@ taxid <- merge(taxid, varnames, by.x="access", by.y="assembly_accession") # pay 
 taxid <- taxid[taxid$seq_length > 400, ]
 
 # save
-write.table(taxid, file= "16s_identified.tab")
+write.table(taxid, file= "16S_SILVA.tab")
 ``` 
 
 
