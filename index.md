@@ -15,11 +15,12 @@ Can consume 🐡
 Can provide 🍣
 
 - Genome sequence files: Genomic FASTA (.fna), RNA from genomic FASTA (.fna), Genomic GenBank format (.gbff), etc.
-<br>
 
 **On web browser**
 
 Access: https://www.ncbi.nlm.nih.gov/sites/batchentrez
+
+
 
 ## 16S rRNA gene analysis using SILVA SSU r138_2019
 
