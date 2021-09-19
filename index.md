@@ -10,14 +10,15 @@
 
 Can consume 🐡
 
-    .FASTA, file with 16S rRNA gene sequences
+.FASTA, file with 16S rRNA gene sequences
 
-    .txt, TAB-delimited data with strain names and genome assembly_accession (NCBI)
+.txt, TAB-delimited data with strain names and genome assembly_accession (NCBI)
 
 
 Can provide 🍣
 
-    .tab, table with taxonomic assignments from phylum to genus 
+.tab, table with taxonomic assignments from phylum to genus 
+
 
 On R:
 ``` 
