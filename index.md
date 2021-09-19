@@ -10,17 +10,16 @@
 
 Can consume 🐡
 
-.FASTA, file with 16S rRNA gene sequences
+- File with 16S rRNA gene sequences (.FASTA)
 
-.txt, TAB-delimited data with strain names and genome assembly_accession (NCBI)
-
+- TAB-delimited data with strain names and NCBI genome assembly_accession (.txt)
 
 Can provide 🍣
 
-.tab, table with taxonomic assignments from phylum to genus 
-
+- Table with taxonomic assignments from phylum to genus (.tab)
 
 On R:
+
 ``` 
 library(DECIPHER) 
 library(dada2)
