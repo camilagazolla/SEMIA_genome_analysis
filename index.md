@@ -10,13 +10,13 @@
 
 Can consume 🐡
 
-- File with containing the 16S rRNA gene sequences (.FASTA) extracted from genome assemblies (rna_from_genomic, on https://www.ncbi.nlm.nih.gov/assembly)
+- File with containing the 16S rRNA gene sequences extracted from genome assemblies (rna_from_genomic, on https://www.ncbi.nlm.nih.gov/assembly)
 
-- TAB-delimited data with strain names and NCBI genome assembly_accession (.txt)
+- TAB-delimited data with strain names and NCBI genome assembly_accession 
 
 Can provide 🍣
 
-- Table with taxonomic assignments from order to genus (.tab)
+- Table with taxonomic assignments from order to genus
 
 On R:
 
