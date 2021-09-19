@@ -28,7 +28,7 @@ Access: https://www.ncbi.nlm.nih.gov/sites/batchentrez
 Use the FTP access to RefSeq to obtain additional data for our genome collection. 
 
 Can provide 🍣
-[assembly_summary.txt](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/assembly_summary.txt), with metadata for all the genomes present at the FTP RefSeq
+- [assembly_summary.txt](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/assembly_summary.txt), with metadata for all the genomes present at the FTP RefSeq
 
 
 **On Unix/Linux terminal:**
@@ -208,9 +208,8 @@ Can consume 🐡
 
 Can provide 🍣
 
-- [File](....) ...
-
-We first need to remove the unwanted data from the assembly_summary.txt
+- assembly_summary_subset.tab, which is just the assembly_summary.txt including only our genome set
+- 
 
 **On R:**
 ```
@@ -221,13 +220,15 @@ library(ggplot2)
 library(dplyr)
 library(ggpubr)
 
+# Step 1 -  Remove the unwanted data from the assembly_summary.txt
+
 # Read assembly_summary.txt
 assembly_summary <- read.delim(file = "~PATH/assembly_summary.txt", header=T,
                                na.strings=".", stringsAsFactors=FALSE,
                                quote="")
 
 # We need a vector containing the GenBank release ID accession numbers for the genomes included on the pyANI analysis
-# I'm just extracting it for the previous data on the R env (ProKlust, Step 1, basicResult df)
+# I'm just extracting it for the previous data on the R env (ProKlust, Step 1, basicResult df) or basicResult <- read.csv("components.csv")
 
 assembly_result <-  basicResult$components
 assembly_result <- gsub("(GCF_...........).*", "\\1", row.names(assembly_result)) # simplify name
@@ -237,6 +238,35 @@ assembly_summary_subset <- setDT(assembly_summary, key = 'X..assembly_accession'
 
 write.table(assembly_summary_subset, "assembly_summary_subset.tab")
 
+
+# Step 2 -  Concatenate pyANI results (ANIb_percentage_identity and ANIb_percentage_identity) in a single file
+
+setwd("~/Input_for_pyANI/genomes_comp") # PATH to the folder contaning all of the pyANI results
+
+# Function to read ANI files
+create_ANI_l <- function(files){
+ ANIb_l <- list()
+ for (i in files){
+ name_archive <- gsub("/out/ANIb_percentage_identity.tab", "", i)
+ df <-  read.table(file = i, sep = "\t", header = TRUE, row.names = 1)
+ row.names(df) <- gsub("(GCF_...........).*", "\\1", row.names(df))
+ names_full <- assembly_summary_subset[match(row.names(df), assembly_summary_subset$X..assembly_accession), c(1,8,9), drop=F]
+ names_full$infraspecific_name <- gsub("strain=", "",names_full$infraspecific_name)
+ names_full <- paste0(names_full$organism_name," ",names_full$infraspecific_name," (",names_full$X..assembly_accession, ")")
+ rownames(df) <- names_full
+ colnames(df) <- names_full
+ ANIb_l[[name_archive]] <- df
+ }
+ return(ANIb_l)
+}
+
+files <- list.files(pattern = "ANIb_percentage_identity*", recursive = TRUE) # list files
+ANIb_identity_l <- create_ANI_l(files = list.files(pattern = "ANIb_percentage_identity*", recursive = TRUE))
+lapply(ANIb_identity_l, function(x) write.table(data.frame(x), 'ANIb_identity.csv', append= T, sep=',' ))
+
+files <- list.files(pattern = "ANIb_alignment_coverage*", recursive = TRUE) # list files
+ANIb_coverage_l <- create_ANI_l(files = list.files(pattern = "ANIb_alignment_coverage*", recursive = TRUE))
+lapply(ANIb_coverage_l, function(x) write.table(data.frame(x), 'ANIb_coverage.csv', append= T, sep=',' ))
 
 ```
 
