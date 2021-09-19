@@ -1,6 +1,7 @@
 ## ...
 
 ...
+The example files may be modified to be smaller.
 
 
 ## De novo Genome Assembly
@@ -97,6 +98,95 @@ find $(realpath .) -maxdepth 1 -type f -name "*.fna" | miCompletelist.sh > test_
 miComplete test_set.tab --hmms Bact105 --weights Bact105 --threads 4 > miComplete_results.tab
 ``` 
 
+## Genomic metrics with FastANI
+
+Can consume 🐡
+
+- Genomic FASTA (.fna) files
+
+Can provide 🍣
+
+- [File with FastANI results](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/fastANIout.txt)
+
+**On Unix/Linux terminal:**
+```
+cd ./bins # directory containing the .fna files
+mkdir out
+ls *fna > list
+mv list out
+ conda activate ani
+ for f in *fna; do fastANI -q "${f}" --rl out/list -o "${f}.fastANI" -t 7 --minFraction 0 ; mv "${f}.fastANI" out; done
+cd out/
+cat *ANI > fastANIout.txt
+```
+
+## Downstream analysis of the FastANI results with ProKlust and computation of genomic metrics with pyANI (ANIb)
+
+Can consume 🐡
+
+- [File with FastANI results](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/fastANIout.txt)
+
+Can provide 🍣
+
+- "Components files" containing the [isolated nodes and](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/components_all.csv)/or [groups formed of complete graphs](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/components_no_isolated.csv)
+- pyANI results from the clusters obtained with FastANI
+
+**On R:**
+```
+setwd("~/FASTANI/out/")
+library(ProKlust)
+library(tidyr)
+
+# Importing FastANI results
+identity <- (read.table(file = "fastANIout.txt", sep = "\t")) [1:3]
+identity <- pivot_wider(identity, names_from =V1, values_from = V3)
+identity <- as.data.frame(identity)
+rownames(identity) <- identity$V2
+identity.sorted <- identity[order(identity["V2"]),]
+identity.sorted[,1] <- NULL
+
+# Step 1. Analysis including all genomes
+# Obtain clusters (this also saves the files at the current wd!)
+basicResult<- prokluster(file = identity.sorted, cutoffs = 95, filterRemoveIsolated = FALSE)
+
+# Step 2., creating list of genomes inputs for pyANI
+dir.create("Input_for_pyANI")
+setwd("~/FASTANI/out/Input_for_pyANI")
+
+# Analysis excluding isolated nodes
+filterIsolated <- prokluster(file = identity.sorted, cutoffs = 95, filterRemoveIsolated = TRUE)
+filterIsolated$components$`components(g)$membership` <- paste0("comp",filterIsolated$components$`components(g)$membership`)
+
+# Creatings lists to the PATH of the genomes to be analyzed together by pyANI
+splitted_list <- split(filterIsolated$components, filterIsolated$components$`components(g)$membership`)
+
+for (i in names(splitted_list)) {
+ df <- splitted_list[i]
+ dirarchives <- paste0("~/GenomeDB/",rownames(df[[i]])) #Full PATH to the folder containg the Genomic FASTA (.fna) files
+ write(dirarchives, file = paste0("Input_for_pyANI/",i,".txt"))
+}
+
+```
+
+**On Unix/Linux terminal:**
+```
+cd Input_for_pyANI
+
+dos2unix *.txt # I work with a Windows Subsystem for Linux (WLS), so I had to correct the encoding.
+
+mkdir genomes
+
+# compute pyANI only within components detected with FastANI/ProKlust 
+for filename in *.txt; 
+do mkdir genomes/$(basename "$filename" .txt);
+xargs -a $filename mv -t genomes/$(basename "$filename" .txt);
+average_nucleotide_identity.py -i genomes/$(basename "$filename" .txt) -o genomes/$(basename "$filename" .txt)/out -v -m ANIb;
+done
+```
+
+
+
+
 ## ...
 
 Can consume 🐡
@@ -107,3 +197,33 @@ Can provide 🍣
 
 - [File](....) ...
 **On R:**
+```
+```
+
+
+## ...
+
+Can consume 🐡
+
+- [File](....) ...
+
+Can provide 🍣
+
+- [File](....) ...
+**On R:**
+```
+```
+
+
+## ...
+
+Can consume 🐡
+
+- [File](....) ...
+
+Can provide 🍣
+
+- [File](....) ...
+**On R:**
+```
+```
