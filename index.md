@@ -228,7 +228,7 @@ assembly_summary <- read.delim(file = "~PATH/assembly_summary.txt", header=T,
                                quote="")
 
 # We need a vector containing the GenBank release ID accession numbers for the genomes included on the pyANI analysis
-# I'm just extracting it for the previous data on the R env (ProKlust, Step 1, basicResult df) or basicResult <- read.csv("components.csv")
+# I'm just extracting it for the previous data on the R env (ProKlust, Step 1, basicResult df) 
 
 assembly_result <-  basicResult$components
 assembly_result <- gsub("(GCF_...........).*", "\\1", row.names(assembly_result)) # simplify name
