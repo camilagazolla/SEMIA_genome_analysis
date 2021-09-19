@@ -9,19 +9,21 @@
 ### 16S rRNA gene analysis using SILVA SSU r138_2019
 
 Can consume 🐡
+
 .FASTA, file with 16S rRNA gene sequences
+
 .txt, TAB-delimited data with strain names and genome assembly_accession (NCBI)
 
 Can provide 🍣
+
 .tab, table with taxonomic assignments from phylum to genus 
 
 On R:
-
 ``` 
 library(DECIPHER) 
 library(dada2)
 
-fas <- "~/cat16sall.fasta" # path to FASTA foçe
+fas <- "~/cat16sall.fasta" # path to FASTA file
 fas <- readDNAStringSet(fas) # read
 fas <- OrientNucleotides(fas) # reorient sequences
 load("~/SILVA_SSU_r138_2019.RData") # path to SILVA_SSU_r138_2019.RData
