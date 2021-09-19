@@ -6,11 +6,12 @@
 ## De novo Genome Assembly
 ...
 
+
 ## Download of Public Genome Sequence Data
 
 Can consume 🐡
 
-- [File with GenBank release ID	accession numbers](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/batchentrez_list.txt) generated exporting ID Table (text) after search on [NCBI Assembly](https://www.ncbi.nlm.nih.gov/assembly)
+- [File with the GenBank release ID	accession numbers column](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/batchentrez_list.txt) from the file [assembly_result.txt](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/assembly_result_Rhizobiaceae.txt), generated generated via Send to: File / Format: ID Table after search on [NCBI Assembly](https://www.ncbi.nlm.nih.gov/assembly)
 
 Can provide 🍣
 
@@ -19,7 +20,6 @@ Can provide 🍣
 **On web browser**
 
 Access: https://www.ncbi.nlm.nih.gov/sites/batchentrez
-
 
 
 ## 16S rRNA gene analysis using SILVA SSU r138_2019
@@ -33,7 +33,6 @@ Can consume 🐡
 Can provide 🍣
 
 - [Table](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/16S_SILVA.tab) with taxonomic assignments from order to genus
-<br>
 
 **On R:**
 
@@ -77,8 +76,26 @@ write.table(taxid, file= "16S_SILVA.tab")
 ``` 
 
 
+## miComplete
 
+Use [miComplete](https://doi.org/10.1093/bioinformatics/btz664) to retrieve basic statistics (size, GC-content, total number of CDS and contigs, as well as N- and L50, N- and L90), completeness and redundancy.
 
+Can consume 🐡
+
+- Genomic FASTA (.fna) files
+
+Can provide 🍣
+
+- [File with genome statistics](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/miComplete_results.tab)
+
+**On Unix/Linux terminal:**
+
+``` 
+source micomplete/bin/activate # activate virtual environment
+cd ./bins # directory containing the .fna files
+find $(realpath .) -maxdepth 1 -type f -name "*.fna" | miCompletelist.sh > test_set.tab
+miComplete test_set.tab --hmms Bact105 --weights Bact105 --threads 4 > miComplete_results.tab
+``` 
 
 ## ...
 
@@ -89,20 +106,4 @@ Can consume 🐡
 Can provide 🍣
 
 - [File](....) ...
-<br>
-
-**On R:**
-
-
-## ...
-
-Can consume 🐡
-
-- [File](....) ...
-
-Can provide 🍣
-
-- [File](....) ...
-<br>
-
 **On R:**
