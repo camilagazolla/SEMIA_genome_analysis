@@ -209,6 +209,7 @@ Can consume 🐡
 Can provide 🍣
 
 - assembly_summary_subset.tab, which is just the assembly_summary.txt including only our genome set
+- ANIb_identity.csv
 - 
 
 **On R:**
@@ -263,7 +264,8 @@ create_ANI_l <- function(files){
 files <- list.files(pattern = "ANIb_percentage_identity*", recursive = TRUE) # list files
 ANIb_identity_l <- create_ANI_l(files = list.files(pattern = "ANIb_percentage_identity*", recursive = TRUE))
 lapply(ANIb_identity_l, function(x) write.table(data.frame(x), 'ANIb_identity.csv', append= T, sep=',' ))
-
+#Ignore the warning "appending column names to file"
+  
 files <- list.files(pattern = "ANIb_alignment_coverage*", recursive = TRUE) # list files
 ANIb_coverage_l <- create_ANI_l(files = list.files(pattern = "ANIb_alignment_coverage*", recursive = TRUE))
 lapply(ANIb_coverage_l, function(x) write.table(data.frame(x), 'ANIb_coverage.csv', append= T, sep=',' ))
