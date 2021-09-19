@@ -25,7 +25,7 @@ Access: https://www.ncbi.nlm.nih.gov/sites/batchentrez
 
 Can consume 🐡
 
-- [File](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/16S_genomic_sequences.fasta) with containing the 16S rRNA gene sequences extracted from genome assemblies (RNA from genomic FASTA (.fna), on [NCBI Assembly] (https://www.ncbi.nlm.nih.gov/assembly))
+- [File](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/16S_genomic_sequences.fasta) with containing the 16S rRNA gene sequences extracted from RNA from genomic FASTA
 
 - [TAB-delimited data](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/varnames.txt) with strain names and NCBI GenBank release ID
 
