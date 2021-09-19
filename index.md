@@ -23,6 +23,22 @@ Can provide 🍣
 Access: https://www.ncbi.nlm.nih.gov/sites/batchentrez
 
 
+## Collect RefSeq data
+
+Use the FTP access to RefSeq to obtain additional data for our genome collection. 
+
+Can provide 🍣
+[assembly_summary.txt](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/assembly_summary.txt), with metadata for all the genomes present at the FTP RefSeq
+
+
+**On Unix/Linux terminal:**
+``` 
+wget ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt
+tail -n +2 assembly_summary.txt > assembly_summary_mod.txt
+mv assembly_summary_mod.txt assembly_summary.txt
+``` 
+
+
 ## 16S rRNA gene analysis using SILVA SSU r138_2019
 
 Can consume 🐡
@@ -174,31 +190,59 @@ cd Input_for_pyANI
 
 dos2unix *.txt # I work with a Windows Subsystem for Linux (WLS), so I had to correct the encoding.
 
-mkdir genomes
+mkdir genomes_comp
 
 # compute pyANI only within components detected with FastANI/ProKlust 
 for filename in *.txt; 
-do mkdir genomes/$(basename "$filename" .txt);
-xargs -a $filename mv -t genomes/$(basename "$filename" .txt);
-average_nucleotide_identity.py -i genomes/$(basename "$filename" .txt) -o genomes/$(basename "$filename" .txt)/out -v -m ANIb;
+do mkdir genomes_comp/$(basename "$filename" .txt);
+xargs -a $filename cp -t genomes_comp/$(basename "$filename" .txt);
+average_nucleotide_identity.py -i genomes_comp/$(basename "$filename" .txt) -o genomes_comp/$(basename "$filename" .txt)/pyANI_out -v -m ANIb;
 done
 ```
 
-
-
-
-## ...
+## Downstream analysis of the pyANI (ANIb) results
 
 Can consume 🐡
 
-- [File](....) ...
+- [assembly_summary.txt](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/assembly_summary.txt), generated at the "Collect RefSeq data" topic
 
 Can provide 🍣
 
 - [File](....) ...
+
+We first need to remove the unwanted data from the assembly_summary.txt
+
 **On R:**
 ```
+# Call library
+library(data.table)
+library(tidyr)
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+
+# Read assembly_summary.txt
+assembly_summary <- read.delim(file = "~PATH/assembly_summary.txt", header=T,
+                               na.strings=".", stringsAsFactors=FALSE,
+                               quote="")
+
+# We need a vector containing the GenBank release ID accession numbers for the genomes included on the pyANI analysis
+# I'm just extracting it for the previous data on the R env (ProKlust, Step 1, basicResult df)
+
+assembly_result <-  basicResult$components
+assembly_result <- gsub("(GCF_...........).*", "\\1", row.names(assembly_result)) # simplify name
+
+# Subset assembly_summary based on assembly_result
+assembly_summary_subset <- setDT(assembly_summary, key = 'X..assembly_accession')[J(assembly_result)]
+
+write.table(assembly_summary_subset, "assembly_summary_subset.tab")
+
+
 ```
+
+
+
+
 
 
 ## ...
