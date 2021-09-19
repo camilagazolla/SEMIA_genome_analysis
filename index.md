@@ -6,13 +6,25 @@
 ### De novo Genome Assembly
 ...
 
+## Download of Public Genome Sequence Data
+
+Can consume 🐡
+
+- [File with GenBank release ID	accession numbers](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/batchentrez_list.txt) generated exporting ID Table (text) from search on [NCBI Assembly] (https://www.ncbi.nlm.nih.gov/assembly)
+
+Can provide 🍣
+
+- Genome sequence files: Genomic FASTA (.fna), RNA from genomic FASTA (.fna), Genomic GenBank format (.gbff), etc.
+
+On web browser, access: https://www.ncbi.nlm.nih.gov/sites/batchentrez
+
 ### 16S rRNA gene analysis using SILVA SSU r138_2019
 
 Can consume 🐡
 
-- [File](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/16S_genomic_sequences.fasta) with containing the 16S rRNA gene sequences extracted from genome assemblies (rna_from_genomic, on https://www.ncbi.nlm.nih.gov/assembly)
+- [File](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/16S_genomic_sequences.fasta) with containing the 16S rRNA gene sequences extracted from genome assemblies (RNA from genomic FASTA (.fna), on [NCBI Assembly] (https://www.ncbi.nlm.nih.gov/assembly))
 
-- [TAB-delimited data](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/varnames.txt) with strain names and NCBI genome assembly_accession 
+- [TAB-delimited data](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/varnames.txt) with strain names and NCBI GenBank release ID
 
 Can provide 🍣
 
@@ -63,12 +75,29 @@ write.table(taxid, file= "16S_SILVA.tab")
 
 
 
+## ...
 
+Can consume 🐡
 
+- [File](....) ...
 
+Can provide 🍣
 
+- [File](....) ...
 
+On R:
 
+## ...
+
+Can consume 🐡
+
+- [File](....) ...
+
+Can provide 🍣
+
+- [File](....) ...
+
+On R:
 
 
 
