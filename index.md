@@ -14,6 +14,7 @@ Can consume 🐡
 
 .txt, TAB-delimited data with strain names and genome assembly_accession (NCBI)
 
+
 Can provide 🍣
 
 .tab, table with taxonomic assignments from phylum to genus 
