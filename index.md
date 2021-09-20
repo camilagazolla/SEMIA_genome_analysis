@@ -275,11 +275,12 @@ lapply(ANIb_coverage_l, function(x) write.table(data.frame(x), 'ANIb_coverage.cs
 
 Can consume 🐡
 
-- [FASTA with 16S gene unaligned_sequences](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/unaligned_sequences.fasta) ...
+- [16S gene unaligned_sequences](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/unaligned_sequences.fasta) ...
 
 Can provide 🍣
 
-- [File](....) ...
+- [Newick tree](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/tree.newick) 
+- [Plotted tree](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/tree.pdf) and [cladogram](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/cladogram.pdf)
 
 **On Unix/Linux terminal:**
 ```
@@ -309,7 +310,7 @@ b3 = 8
 b4 = 10
 b5 = "n"
 
-# Run Gblock 
+# Run Gblocks 
 system(paste0("~/Gblocks_0.91b/Gblocks", "aligned_sequences.fasta -t=d", " -b1=", 
               b1, " -b2=", b2, " -b3=", b3, " -b4=", 
               b4, " -b5=", b5))
@@ -352,6 +353,7 @@ tree <- treeio::read.newick(file="tree.newick", node.label='support')
 tree@phylo[["tip.label"]] <- gsub("_", " ", tree@phylo[["tip.label"]])
 root <- rootnode(tree)  
 
+# Plot tree rooted on external group
 ggtree(tree, ladderize=T, layout='rectangular', size=0.2)+ 
   geom_tiplab(size=2, fontface="italic")+
   theme(legend.position = c(1,-1)) + 
@@ -370,8 +372,8 @@ ggtree(tree, ladderize=T, layout='rectangular', size=0.2, branch.length = "none"
               shape=21, size=0.5, color = "black", fill = "black")+
    xlim(0,150) # + ylim(-15,45)  # Change to improve the tree
 
-ggsave("cladogram_bola.pdf", plot = last_plot(), width = 21/2.5, height = 29.7, units = "cm", limitsize = FALSE)
-ggsave("cladogram_bola.png", plot = last_plot(), width = 21/2.5, height = 29.7, units = "cm", limitsize = FALSE)
+ggsave("cladogram.pdf", plot = last_plot(), width = 21/2.5, height = 29.7, units = "cm", limitsize = FALSE)
+ggsave("cladogram.png", plot = last_plot(), width = 21/2.5, height = 29.7, units = "cm", limitsize = FALSE)
 
 ```
 
