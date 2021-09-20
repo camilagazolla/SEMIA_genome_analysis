@@ -271,22 +271,108 @@ lapply(ANIb_coverage_l, function(x) write.table(data.frame(x), 'ANIb_coverage.cs
 
 ```
 
-
-
-
-
-
-## ...
+## 16S rRNA gene phylogeny using
 
 Can consume 🐡
 
-- [File](....) ...
+- [FASTA with 16S gene unaligned_sequences](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/unaligned_sequences.fasta) ...
 
 Can provide 🍣
 
 - [File](....) ...
+
+**On Unix/Linux terminal:**
+```
+sina -i unaligned_sequences.fasta -r ~/SILVA_138.1_SSURef_opt.arb -o aligned_sequences.fasta -p 30
+```
+
 **On R:**
 ```
+library(DECIPHER)
+library(phangorn)
+library("ggtree")
+library("tidyverse")
+library(phytools)
+library(phangorn)
+library(treeio)
+
+root_name <- "Mesorhizobium_loti_NBRC_14779_AB680660" # name of the root sequence
+
+setwd("~/SEMIAS_Rhizobium_Agrobacterium") # PATH to the folder contaning the 16S sequences FASTA file 
+
+alignment <- readRNAStringSet("aligned_sequences.fasta")
+
+ntax = length(alignment)
+b1 = floor(ntax*0.5)+1
+b2 = floor(ntax*0.85)
+b3 = 8
+b4 = 10
+b5 = "n"
+
+# Run Gblock 
+system(paste0("~/Gblocks_0.91b/Gblocks", "aligned_sequences.fasta -t=d", " -b1=", 
+              b1, " -b2=", b2, " -b3=", b3, " -b4=", 
+              b4, " -b5=", b5))
+              
+alignment_cleaned <- readRNAStringSet("aligned_sequences.fasta-gb") # Ignore warning message about ignoring invalid one-letter sequence codes
+
+alignment_cleaned_nt <- alignment_cleaned@ranges@width[1] # final number of nucleotides remaining in the alignment
+
+# view the alignment in a browser (optional)
+BrowseSeqs(alignment_cleaned, highlight=0)
+
+# construct a neighbor-joining tree
+phangAlign <- phyDat(as(alignment_cleaned, "matrix"))
+dm <- dist.ml(phangAlign) #compute pairwise distances
+tree <- NJ(dm) # construct a neighbor-joining tree
+mt <- modelTest(phangAlign, tree=tree, G = TRUE, I = TRUE, k = 4) # preper with modelTest
+mt[order(mt$AIC),]
+bestmodel <- mt$Model[which.min(mt$AIC)] # choose best model from the table according to AIC
+write(bestmodel, file= "bestmodel.tab")
+env = attr(mt, "env")
+fitStart = eval(get(bestmodel, env), env) # let R search the table
+
+# fit the maximum likelihood tree using the neighbor-joining tree as a starting point
+mt.pml <- pml(tree, phangAlign, model=bestmodel, k=4)
+mt.pml <- optim.pml(mt.pml,optNni=TRUE,optBf=TRUE,optQ=TRUE,optInv=TRUE,optGamma=TRUE,optEdge=TRUE)
+
+bs = bootstrap.pml(mt.pml, bs=500, optNni=TRUE, multicore = TRUE)
+
+sink("MLparameters.txt")
+print(mt.pml)
+sink()
+
+tree <- plotBS((reroot(fitStart$tree, (match(root_name,fitStart[["tree"]][["tip.label"]])))), bs, p = 50, type="p") # ROOT ON SELECTED NODE
+
+write.tree(tree, file = "tree.newick", append = FALSE,
+           digits = 10, tree.names = FALSE)
+
+# Read tree
+tree <- treeio::read.newick(file="tree.newick", node.label='support')
+tree@phylo[["tip.label"]] <- gsub("_", " ", tree@phylo[["tip.label"]])
+root <- rootnode(tree)  
+
+ggtree(tree, ladderize=T, layout='rectangular', size=0.2)+ 
+  geom_tiplab(size=2, fontface="italic")+
+  theme(legend.position = c(1,-1)) + 
+  geom_point2(aes(subset=!isTip & node != root & support > 70), 
+              shape=21, size=0.5, color = "black", fill = "black") +
+  xlim(-.1, 0.5) # + ylim(-10,35) # Change to improve the tree
+
+ggsave("tree.pdf", plot = last_plot(), width = 21, height = 29.7, units = "cm", limitsize = FALSE)
+ggsave("tree.png", plot = last_plot(), width = 21, height = 29.7, units = "cm", limitsize = FALSE)
+
+# plot cladogram rooted on external group
+ggtree(tree, ladderize=T, layout='rectangular', size=0.2, branch.length = "none")+ 
+  geom_tiplab(size=2, fontface="italic")+
+  theme(legend.position = c(1,-1)) + 
+  geom_point2(aes(subset= !isTip & node != root & support > 70), 
+              shape=21, size=0.5, color = "black", fill = "black")+
+   xlim(0,150) # + ylim(-15,45)  # Change to improve the tree
+
+ggsave("cladogram_bola.pdf", plot = last_plot(), width = 21/2.5, height = 29.7, units = "cm", limitsize = FALSE)
+ggsave("cladogram_bola.png", plot = last_plot(), width = 21/2.5, height = 29.7, units = "cm", limitsize = FALSE)
+
 ```
 
 
