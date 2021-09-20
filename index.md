@@ -275,7 +275,7 @@ lapply(ANIb_coverage_l, function(x) write.table(data.frame(x), 'ANIb_coverage.cs
 
 Can consume 🐡
 
-- [16S gene unaligned_sequences](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/unaligned_sequences.fasta) ...
+- [16S gene unaligned_sequences](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/unaligned_sequences.fasta) 
 
 Can provide 🍣
 
