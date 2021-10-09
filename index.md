@@ -422,10 +422,10 @@ tree@phylo[["tip.label"]] <- map[tree@phylo[["tip.label"]]] #replace names
 
 # annotate and save tree plot
 
- ggtree(tree, layout='daylight', size=0.1) +
-   # geom_tiplab(size=1)+ # JUST TO HELP WITH ANNOT!
+  ggtree(tree, layout='daylight', size=0.1) +
+   # geom_tiplab(size=1)+ # JUST TO HELP WITH ANNOT
    geom_point2(aes(subset=!isTip & support > 70), shape=21, size=1, color = "black", fill = "black") +
-   # geom_text(aes(label=node), size=2, color= "red") + # JUST TO HELP WITH ANNOT!
+   # geom_text(aes(label=node), size=2, color= "red") + # JUST TO HELP WITH ANNOT
    geom_cladelabel (node=107, label= "G1", fontsize=5, hjust=0.5, vjust = 1.6, offset=-1) +
    geom_cladelabel (node=119, label= "G2", fontsize=5, hjust=0.5, vjust = 1.6) + 
    geom_cladelabel (node=121, label= "G3", fontsize=5, hjust=0.5, vjust = 1.6) +
@@ -433,7 +433,7 @@ tree@phylo[["tip.label"]] <- map[tree@phylo[["tip.label"]]] #replace names
    geom_cladelabel (node=131, label= "G5", fontsize=5, hjust= -0.1, vjust = 0.5) +
    geom_cladelabel (node=134, label= "G6", fontsize=5, hjust= -0.1, vjust = 0.5) +
    geom_cladelabel (node=138, label= "G7", fontsize=5, hjust= -0.1, vjust = 0.5) +
-   geom_cladelabel (node=141, label= "G8", fontsize=5, hjust=0, vjust = 0, offset=-1) +
+   geom_cladelabel (node=142, label= "G8", fontsize=5, hjust=0, vjust = 0, offset=-1) +
    geom_cladelabel (node=155, label= "G9", fontsize=5, hjust=0, vjust = 0, offset=-1) +
    geom_cladelabel (node=168, label= "G10", fontsize=4, hjust=0.3, vjust = -0.2, offset=-0.1) +
    geom_cladelabel (node=169, label= "G11", fontsize=4, hjust=0.5, vjust = 0, offset=-0.4) +
@@ -441,12 +441,12 @@ tree@phylo[["tip.label"]] <- map[tree@phylo[["tip.label"]]] #replace names
    geom_cladelabel (node=184, label= "G13", fontsize=5, hjust=0.5, vjust = 0, offset=-0.7) +
    geom_cladelabel (node=191, label= "G14", fontsize=5, hjust=0.5, vjust = 0) +
    geom_cladelabel (node=100, label= "G15", fontsize=5, hjust=1.1, vjust =0.5) +
-   geom_tiplab(mapping=aes(subset = node %in% c(32,33,5,6,7)), offset = -0.3, size=3) +
-   geom_tiplab(mapping=aes(subset = node %in% 36), offset = -0.3, angle=45, size=3)+
-   geom_tiplab(mapping=aes(subset = node %in% 39), offset = -0.3, angle=55, size=3) +
-   geom_tiplab(mapping=aes(subset = node %in% 40), offset = -0.3, angle=35, size=3) +
-   geom_tiplab(mapping=aes(subset = node %in% 68), offset = -0.3, angle=55, size=3) +
-   geom_tiplab(mapping=aes(subset = node %in% 1), offset = -0.3, angle=340, size=3) 
+   geom_tiplab(mapping=aes(subset = node %in% c(32,33,57,56,5,6,7)), offset = -0.3, size=3) +
+   geom_tiplab(mapping=aes(subset = node %in% 36), offset = -0.3,angle=45, size=3)+
+   geom_tiplab(mapping=aes(subset = node %in% 39), offset = -0.3,angle=55, size=3) +
+   geom_tiplab(mapping=aes(subset = node %in% 40), offset = -0.3,angle=35, size=3) +
+   geom_tiplab(mapping=aes(subset = node %in% 68), offset = -0.3,angle=55, size=3) +
+   geom_tiplab(mapping=aes(subset = node %in% 1), offset = -0.3,angle=340, size=3) 
 
  ggsave("tree_annot.pdf", plot = last_plot(), width = 21, height = 21, units = "cm", limitsize = FALSE)
  ggsave("tree_annot.svg", plot = last_plot(), width = 21, height = 21, units = "cm", limitsize = FALSE)
