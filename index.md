@@ -385,7 +385,7 @@ Can consume 🐡
 
 Can provide 🍣
 
-- [File](....) ...
+- [Tree plot with annotation](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/tree_annot.pdf) 
 
 **On Unix/Linux terminal:**
 ```
@@ -451,3 +451,70 @@ tree@phylo[["tip.label"]] <- map[tree@phylo[["tip.label"]]] #replace names
  ggsave("tree_annot.pdf", plot = last_plot(), width = 21, height = 21, units = "cm", limitsize = FALSE)
  ggsave("tree_annot.svg", plot = last_plot(), width = 21, height = 21, units = "cm", limitsize = FALSE)
 ```
+
+## Pangenome analysis with anvi'o
+
+The following section is based on the anvi’o version 2.1.0 workflow for microbial pangenomics, avaliable at https://merenlab.org/2016/11/08/pangenomics-v2/
+
+Can consume 🐡
+
+- Genomic FASTA (.fna) files
+- [TAB-delimited (.txt) data for genomes (look at the example here!](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/external-genomes-all.txt)). Use ASCII letters, digits, and underscore... no spaces, and can't start with a digit.
+- [TAB-delimited data layer (groups, species, etc.)](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/layer-additional-data-all.txt)
+
+Can provide 🍣
+
+- [ ]( ) 
+
+**On Unix/Linux terminal:**
+```
+# Activate Anvi'o 
+conda activate anvio-7
+
+# COPY THE GENOME DIR and cd to it
+cd ./copy_bins # directory containing the .fna files
+
+# Re-formatting genomes input 
+for filename in *.fna; do anvi-script-reformat-fasta "${filename}" -o "${filename}.new" -l 0 --simplify-names; done
+
+# Remove 
+rm *.fna
+
+# Rename genome .fna archives (simplify and change extension)
+rename 's/\.1.*/.fna/' *
+
+# Generate db (no external gene calls, uses prodigal, add functional annotation)
+for i in `ls *fna | awk 'BEGIN{FS=".fna"}{print $1}'`
+do
+  anvi-gen-contigs-database -f $i.fna -o $i.db -T 200 -n "PANGENOME_SEMIA"
+	anvi-run-hmms -T 40 -c $i.db
+	anvi-run-kegg-kofams -T 40 -c $i.db
+	anvi-run-ncbi-cogs -T 40 -c $i.db
+	anvi-run-pfams -T 40 -c $i.db
+	anvi-run-scg-taxonomy -T 40 -c $i.db
+done
+
+# Generate a genomes storage
+anvi-gen-genomes-storage -e external-genomes-all.txt -o PANGENOME_SEMIA_ALL-GENOMES.db 
+# had an issue here, solved with https://github.com/merenlab/anvio/issues/1199
+
+# Running a pangenome analysis
+anvi-pan-genome -g PANGENOME_SEMIA_ALL-GENOMES.db \
+--project-name "PANGENOME_SEMIA" \
+--output-dir PANGENOME_SEMIA \
+--minbit 0.5 \
+--mcl-inflation 2 \
+--min-occurrence 1 \
+--num-threads 8 \
+--use-ncbi-blast \
+
+anvi-import-misc-data layer-additional-data-all.txt \
+                      -p PANGENOME_SEMIA/PANGENOME_SEMIA-PAN.db \
+                      -D  default \
+                      --target-data-table layers
+                      
+# Displaying the pan genome
+anvi-display-pan -g PANGENOME_SEMIA_ALL-GENOMES.db -p PANGENOME_SEMIA/PANGENOME_SEMIA-PAN.db --server-only
+```
+
+Now, open the browser and paste http://localhost:8080/
