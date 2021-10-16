@@ -464,7 +464,7 @@ Can consume 🐡
 
 Can provide 🍣
 
-- [ ]( ) 
+- [ ]( )   ?????????????????????????
 
 **On Unix/Linux terminal:**
 ```
@@ -518,3 +518,318 @@ anvi-display-pan -g PANGENOME_SEMIA_ALL-GENOMES.db -p PANGENOME_SEMIA/PANGENOME_
 ```
 
 Now, open the browser and paste http://localhost:8080/
+
+After selecting the bins, we need to create a archive with anvi-summarize function for downstream analysis.
+
+**On Unix/Linux terminal:**
+
+```
+anvi-summarize -p PANGENOME_SEMIA/PANGENOME_SEMIA-PAN.db \
+           -g PANGENOME_SEMIA_ALL-GENOMES.db \
+           -C Single_Double_Core_Etc \ ## Genome Collection Name
+```
+
+
+## PCA of COGs, KOs and Pfams
+
+Can consume 🐡
+
+- [TAB-delimited (.txt) generated with anvi-summarize](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/PANGENOME_SEMIA_gene_clusters_summary.txt). 
+
+Can provide 🍣
+
+- A series of[PCA plots for each bin/annotation source](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_plots.svg)
+- [.tab with the contributions of variables](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_CONTRIB_VARIABLES.tab)
+- Files with PERMANOVA(https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_PERMANOVA.TXT) AND PERMDISP2(https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_BETADISPER.TXT) statistics.
+
+**On R:**
+```
+# read data
+gc_summary <- read.delim("PANGENOME_SEMIA_gene_clusters_summary.txt", sep = "\t")
+dic <- read.table("layer-additional-data-all.txt", header = T) # group/strain data
+
+# split bins
+gc_summary_split <- split(gc_summary, gc_summary$bin_name)
+
+# functional annotation rate
+result_annot <- data.frame()
+for (name in names(gc_summary_split)){
+x <- gc_summary_split[[name]]
+
+# sum results for each gene cluster with annot
+result <- data.frame()
+for (col in colnames(x)){
+   x_tab <- as.data.frame(table(x[col])) # subset annot
+   x_tab <-  subset(x_tab, Var1!="") # remove blank
+   Freq <- sum(x_tab$Freq) # sum row with annot
+   df <- cbind(col,Freq)
+   result <- rbind(result, df)
+}
+result <- result[c(20,22,26,27),]
+result$Group <- name
+result_annot <- rbind(result_annot, result)
+}
+
+# just a quick fix
+result_annot$Freq <- as.numeric(result_annot$Freq) 
+result_annot$col <- gsub("_", " ", result_annot$col)
+result_annot$col <- gsub("aa sequence", "Total GCs", result_annot$col)
+result_annot$col <- gsub("COG20 FUNCTION", "COG20", result_annot$col)
+result_annot$Group <- gsub("V10", "Variable ~10%", result_annot$Group)
+result_annot$Group <- gsub("V25", "Variable ~25%", result_annot$Group)
+result_annot$Group <- gsub("V50", "Variable ~50%", result_annot$Group)
+result_annot$Group <- gsub("V90", "Variable ~90%", result_annot$Group)
+
+library(RColorBrewer)
+# Define the number of colors you want
+nb.cols <- dim(table(result_annot$col))
+mycolors <- colorRampPalette(brewer.pal(8, "Set1"))(nb.cols)
+
+library(ggplot2)
+pA <- ggplot(result_annot, aes(x = reorder(col, +Freq), y = Freq, fill = col)) + 
+   geom_bar(stat = "identity") +
+   facet_grid(~Group,  switch = "both") +
+   labs(y = "Counts") + 
+   theme_minimal(12) + scale_fill_manual(values = mycolors) +
+   theme(axis.text.x = element_blank(), 
+         legend.position = "bottom", legend.title = element_blank(), 
+         panel.grid = element_blank(), 
+         axis.title.x = element_blank(),
+         plot.title = element_blank(),
+         panel.spacing=unit(0.1, "lines"),
+         strip.text.x = element_text(angle = 90, hjust = 1)) +
+   guides(fill=guide_legend(nrow=2,byrow=TRUE))
+
+# a look on cluster desconsidering bins
+result <- list()
+for (col in colnames(gc_summary)){
+   x_tab <- as.data.frame(table(gc_summary[col])) # subset annot
+   x_tab <-  subset(x_tab, Var1!="") # remove blank
+   Freq <- sum(x_tab$Freq) # sum row with annot
+   df <- cbind(col,Freq)
+   result <- rbind(result, df)
+}
+
+ggsave(paste0("plot/Figure5.svg"), plot = last_plot(), width = 90, height = 120, units = "mm", limitsize = FALSE) 
+ggsave(paste0("plot/Figure5.png"), plot = last_plot(), width = 90, height = 120, units = "mm", limitsize = FALSE) 
+ggsave(paste0("plot/Figure5.pdf"), plot = last_plot(), width = 90, height = 120, units = "mm", limitsize = FALSE) 
+
+# PCA 
+
+library(dplyr)
+library(tidyverse)
+library(reshape2)
+
+##! select bin/parameters to analyse !###
+
+BIN_NAMES <- names(gc_summary_split)
+
+annot_sources <- c("COG20_CATEGORY",
+                  "COG20_FUNCTION",
+                  "COG20_PATHWAY",
+                  "KEGG_Class",
+                  "KEGG_Module",
+                  "KOfam",
+                  "Pfam")
+##!!! ##
+
+pvalues <- NULL
+for (BIN_NAME in BIN_NAMES){
+x <- gc_summary_split[[BIN_NAME]]
+for (annot_source in annot_sources){
+# select
+df <- NULL
+df <- cbind(x$genome_name, x[[annot_source]])
+colnames(df) <- c("genome_name", annot_source)
+df <- as.data.frame(df)
+
+# delete blank
+df<-df[!(df[[annot_source]]==""),]
+
+# obtain freq
+freq_df <- as.data.frame(table(df))
+freq_df$genome_name <- as.character(freq_df$genome_name)
+freq_df$Group <- freq_df$genome_name
+
+# add group/strain data
+map = setNames(dic$group,dic$default) 
+freq_df$Group <- map[freq_df$Group] #replace names
+freq_df$Group <- gsub("_", " ", freq_df$Group)
+
+levels_group <- c("G1","G2","G3","G4","SEMIA 4060","SEMIA 4080","G5","SEMIA 4064",
+                  "G6","SEMIA 4085","SEMIA 4029","G7","G8","SEMIA 414","SEMIA 475","G9",
+                  "SEMIA 4089","G10","G11","G12","G13","G14","SEMIA 4027","G15","34/80","SEMIA 442","SEMIA 4084")
+
+levels_group <- intersect(levels_group,unique(freq_df$Group))
+freq_df$Group <-  factor(freq_df$Group, levels=levels_group)
+freq_df <- freq_df %>% group_by(genome_name) %>% mutate(relAbundByPath =Freq/sum(Freq))
+
+# "unmelt" freq_df (need a count data set matrix or data.frame class)
+freq_df_unmelt <- dcast(data = freq_df,formula = genome_name ~get(annot_source),fun.aggregate = sum,value.var = "Freq")
+freq_df_unmelt <- freq_df_unmelt %>% remove_rownames %>% column_to_rownames(var="genome_name")
+
+# some strains may be have been removed, arrange a dic cleaned
+dic_cleaned <- filter(dic, default %in% rownames(freq_df_unmelt))
+
+# cmultRepl 
+library(zCompositions)
+
+# Check if zeros are present
+if(sum(colSums(freq_df_unmelt == 0)) < 1){
+   
+   Ab_temp_no0 <- freq_df_unmelt
+   print("no zero found")
+   
+   } else {
+      
+      # Check columns with only 1 non-zero in the given data set
+      checkNumZerosCol <- apply(freq_df_unmelt,2,function(x) sum(x==0))
+      cases <- which(checkNumZerosCol == (nrow(freq_df_unmelt) - 1))
+      
+      if((length(cases) >=	1) == TRUE) {
+         Ab_temp_no0 <- cmultRepl(freq_df_unmelt[,-cases], method = "GBM")
+         } else {
+            Ab_temp_no0 <- cmultRepl(freq_df_unmelt, method = "GBM")
+         }
+      }
+
+# CLR 
+library(mixOmics)
+data.clr <- logratio.transfo(as.matrix(Ab_temp_no0), logratio = 'CLR', offset = 0) 
+class(data.clr) <- "matrix"
+
+# PCA
+pca2c <- prcomp(data.clr, center = FALSE, scale = FALSE)
+var_explained <- 100*(pca2c$sdev^2)/sum(pca2c$sdev^2) 
+PC1 = format(var_explained[1], digits=2, nsmall=2) 
+PC2 = format(var_explained[2], digits=2, nsmall=2) 
+
+# graph of samples
+df <- as.data.frame(pca2c$x)
+df$genome_name <- rownames(df)
+
+df$Group <- df$genome_name
+df$Group <- map[df$Group]
+df$Group <- gsub("_", " ", df$Group)
+
+# Define the number of colors you want
+nb.cols <- length(unique(dic$group))
+mycolors <- colorRampPalette(brewer.pal(8, "Set1"))(nb.cols)
+
+library(ggrepel)
+pB <- NULL
+pB <-  ggplot(df, aes(x=PC1,y=PC2)) +
+   geom_point(aes_string(color="Group"), size=1) +
+   theme_minimal(8) +
+   labs(x = (paste0("PC1 (", PC1, "%)")), y = (paste0("PC2 (", PC2, "%)")))+
+   geom_text_repel(aes_string(label = "Group", color = "Group"), size = 2, max.overlaps = 1000, segment.size=0.1) +
+   theme(legend.position="none", panel.grid = element_blank()) +
+   scale_color_manual(values = mycolors)
+
+# SAVE FOR LATER
+if(annot_source == "Pfam" & BIN_NAME == "Core"){
+   pB_Pfam_Core <- pB 
+}
+
+# SAVE FOR LATER
+if(annot_source == "Pfam" & BIN_NAME == "V50"){
+   pB_Pfam_V50 <- pB 
+}
+
+# graph of variables
+library(factoextra)
+midpoint <- (max((facto_summarize(pca2c, element= "var", result = "contrib"))$contrib)/2)
+
+options(ggrepel.max.overlaps = Inf)
+
+contrib = (as.matrix(dim(pca2c$x))[2,1])
+percent <- c(0.1, 0.25, 0.5, 0.75, 1)
+p.list <- list() # create list to hold plots
+for (n in percent){
+      p <- fviz_pca_biplot(pca2c, repel = TRUE, geom.var = c("point", "text"), geom.ind = c("point"), col.ind = "black", alpha.ind = 0.1,
+                        labelsize = 2, select.var = list(contrib =(as.integer(contrib*n))), col.var="contrib", axes.linetype = "blank") +
+      scale_color_gradient2(low="#DDDDDD", mid="#009900", high="red", midpoint=midpoint)+
+         # labs(title = (paste0("Top ", (n*100), "% contributing variables")), x = (paste0("PC1 (", PC1, "%)")), y = (paste0("PC2 (", PC2, "%)"))) +
+         labs(x="", y="", title="")+
+      theme_minimal(8) + theme(plot.title = element_text(size=8),panel.grid = element_blank() )
+   
+      p.list[[paste0(n)]] <- p
+}
+pD <- p.list[[1]] #10%
+
+# SAVE FOR LATER
+if(annot_source == "Pfam" & BIN_NAME == "Core"){
+   pD_Pfam_Core <- pD 
+}
+
+# SAVE FOR LATER
+if(annot_source == "Pfam" & BIN_NAME == "V50"){
+   pD_Pfam_V50 <- pD 
+}
+
+contrib <- facto_summarize(pca2c, element= "var", result = "contrib")
+
+write.table(contrib, file = paste0("plot/", annot_source, "_",BIN_NAME,"_CONTRIB_VARIABLES.tab"))
+
+# multivariate Analysis
+# calculate dist
+library(vegan)
+distab <- vegdist(data.clr, method = "euclidean")
+
+D <- list(data = data.clr,
+          D = as.matrix(distab),
+          Coefficient = "Aitchison")
+
+library(PERMANOVA)
+permanova <- PERMANOVA(D, as.factor(dic_cleaned$group)) 
+print(permanova)
+# P-value
+perMANOVA.p <- permanova[["pvalue"]]
+
+sink(file = paste0("plot/",annot_source, "_",BIN_NAME,"_PERMANOVA.TXT"))
+print(permanova)
+sink()
+
+# betadisper 
+betadisperanova <- anova(betadisper(distab, as.factor(dic_cleaned$group)))  
+print(betadisperanova)
+
+sink(file = paste0("plot/",annot_source, "_", BIN_NAME,"_BETADISPER.TXT"))
+print(betadisperanova)
+sink()
+
+# P-value
+betadisper.p <- print(as.data.frame(betadisperanova)["Groups", "Pr(>F)"])
+
+pvalues = rbind(pvalues, data.frame(perMANOVA.p, betadisper.p, annot_source, BIN_NAME)) # save p to a df
+
+library(ggpubr)
+pBpD <- ggarrange(pB,pD, ncol = 1)
+
+pBpD <- annotate_figure(pBpD, bottom = text_grob(paste0("PERMANOVA p-value= ", round(perMANOVA.p, 2),
+                                         " | PERMDISP2 p-value= ",  round(betadisper.p , 2)),
+                                         size = 8))
+
+annotate_figure(pBpD, top = text_grob(paste0(BIN_NAME, " (",annot_source,")"),
+                                            size = 8))
+					    
+ggsave(paste0("plot/",annot_source,"_",BIN_NAME,"_plots.svg"), plot = last_plot(), width = 21, height = 21, units = "cm", limitsize = FALSE) #CHANGE THIS
+
+}
+}
+
+write.table(pvalues, file = paste0("plot/pvalues_PERMANOVA_bdisper.tab"))
+
+# "THE LATER"
+pD_Pfam_V50 <- pD_Pfam_V50+theme(legend.position = "none")
+pD_Pfam_Core <- pD_Pfam_Core + theme(legend.position = c(0.9, 0.95), legend.key.size = unit(0.3, "cm"))
+
+ggarrange(pB_Pfam_Core, pB_Pfam_V50,
+           pD_Pfam_Core, pD_Pfam_V50,
+           labels = c("a", "b","c", "d"))
+
+ggsave(paste0("plot/Figure6.svg"), plot = last_plot(), width = 24, height = 19, units = "cm", limitsize = FALSE)
+ggsave(paste0("plot/Figure6.png"), plot = last_plot(), width = 24, height = 19, units = "cm", limitsize = FALSE)
+ggsave(paste0("plot/Figure6.pdf"), plot = last_plot(), width = 24, height = 19, units = "cm", limitsize = FALSE)
+
+```
