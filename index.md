@@ -534,13 +534,13 @@ anvi-summarize -p PANGENOME_SEMIA/PANGENOME_SEMIA-PAN.db \
 
 Can consume 🐡
 
-- [TAB-delimited (.txt) generated with anvi-summarize](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/PANGENOME_SEMIA_gene_clusters_summary.txt). 
+- [TAB-delimited (.txt) generated with anvi-summarize](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/PANGENOME_SEMIA_gene_clusters_summary.txt)
 
 Can provide 🍣
 
-- A series of[PCA plots for each bin/annotation source](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_plots.svg)
+- A series of [PCA plots for each bin/annotation source](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_plots.svg)
 - [.tab with the contributions of variables](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_CONTRIB_VARIABLES.tab)
-- Files with PERMANOVA(https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_PERMANOVA.TXT) AND PERMDISP2(https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_BETADISPER.TXT) statistics.
+- Files with [PERMANOVA](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_PERMANOVA.TXT) AND [PERMDISP2](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/Pfam_Core_BETADISPER.TXT) statistics
 
 **On R:**
 ```
