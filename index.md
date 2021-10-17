@@ -535,6 +535,7 @@ anvi-summarize -p PANGENOME_SEMIA/PANGENOME_SEMIA-PAN.db \
 Can consume 🐡
 
 - [TAB-delimited (.txt) generated with anvi-summarize](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/PANGENOME_SEMIA_gene_clusters_summary.txt)
+- [TAB-delimited data layer (groups, species, etc.)](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/layer-additional-data-all.txt)
 
 Can provide 🍣
 
