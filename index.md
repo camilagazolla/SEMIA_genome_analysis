@@ -834,3 +834,176 @@ ggsave(paste0("plot/Figure6.png"), plot = last_plot(), width = 24, height = 19, 
 ggsave(paste0("plot/Figure6.pdf"), plot = last_plot(), width = 24, height = 19, units = "cm", limitsize = FALSE)
 
 ```
+## Symbiotic genes analysis
+
+Can consume 🐡
+
+- [TAB-delimited (.txt) generated with anvi-summarize](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/PANGENOME_SEMIA_gene_clusters_summary.txt)
+- [TAB-delimited data layer (groups, species, etc.)](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/layer-additional-data-all.txt)
+
+Can provide 🍣
+
+- ...
+
+**On R:**
+```
+gc_summary <- read.delim("PANGENOME_SEMIA_gene_clusters_summary.txt", sep = "\t")
+
+#Fixation
+Fixation <- c("ccoO","cadA","ccoG","ccoS","dusB","fdxN","fixA","fixB","fixC","fixF","fixG","fixG","fixH","fixI",
+"fixI1","fixI2","fixK","fixL","fixM","fixO","fixO","fixO1","fixO2","fixO3","fixQ","fixQ","fixQ1",
+"fixQ2","fixQ3","fixR","fixS","fixS1","fixS2","fixT1","fixT2","fixT3","fixU","fixU","frxA",
+"nifB","nifE","nifH","nifK","nifK1","nifK2","nifN","nifQ","nifR","nifS","nifT","nifU","nifV","nifW","nifW","nifX","nifZ","nifZ","sufS")
+COG20_Fixation <- data.frame()
+for (i in Fixation){
+  df <- gc_summary[grep(i, gc_summary$COG20_FUNCTION, ignore.case=TRUE), ]
+  COG20_Fixation <- rbind(COG20_Fixation,df)
+}
+COG20_Fixation$bin_name <- "Fixation"
+
+#Nodulation
+COG20_Nodulation <- data.frame()
+Nodulation <- c("cysD","cysN","fcl","fabG","cysC","glmM","glmS","glmS2","gmd","manA","manC","maoC","nfeC","nfeD","nodA",
+"nodB","nodC","nodD1","nodD2","nodD3","nodE","nodF","nodG","nodH","nodI","nodJ","nodL","nodM","nodN","nodN2",
+"nodP","nodP1","nodP2","nodQ","nodQ1","nodQ2","nodS","nodU","nodV","nodY","nodZ","noeB","noeD","noeE","noeI",
+"noeJ","noeK","noeL","nolA","nolB","nolE","nolG","nolK","nolL","nolM","nolN","nolO","nolR","nolU","nolV","nolY",
+"nolZ","nopA","nopB","nopC","nopJ","nopL","nopM","nopP","nopT","nopX","nosF","nwsA","rhcC1","rhcL","y4nM")
+for (i in Nodulation){
+  df <- gc_summary[grep(i, gc_summary$COG20_FUNCTION, ignore.case=TRUE), ]
+  COG20_Nodulation <- rbind(COG20_Nodulation,df)
+}
+COG20_Nodulation$bin_name <- "Nodulation"
+
+#Symbiont fitness
+COG20_Symbiont_fitness <- data.frame()
+Symbiont_fitness <- c("betB","betB2","cyaO","chvA","attK","dinP","gabD3","hpaE","ndvA")
+for (i in Symbiont_fitness){
+  df <- gc_summary[grep(i, gc_summary$COG20_FUNCTION, ignore.case=TRUE), ]
+  COG20_Symbiont_fitness <- rbind(COG20_Symbiont_fitness,df)
+}
+COG20_Symbiont_fitness$bin_name <- "Symbiont_fitness"
+
+#Fixation,host benefit
+COG20_Fixation_host_benefit <- data.frame()
+Fixation_host_benefit <- c("ccoP","fixJ","fixN1","fixN","ccoN","fixN2","fixN3","fixP","fixP1","fixP2","fixP3","fixX","nifA","nifD","nifD1","nifD2","nodW","nwsB")
+for (i in Fixation_host_benefit){
+  df <- gc_summary[grep(i, gc_summary$COG20_FUNCTION, ignore.case=TRUE), ]
+  COG20_Fixation_host_benefit <- rbind(COG20_Fixation_host_benefit,df)
+}
+COG20_Fixation_host_benefit$bin_name <- "Fixation_host_benefit"
+
+library(reshape2)
+library(dplyr)
+library(tibble)
+
+COG20 <- rbind(COG20_Fixation,COG20_Fixation_host_benefit,COG20_Nodulation,COG20_Symbiont_fitness)
+COG20$COG20_FUNCTION <- paste0(COG20$COG20_FUNCTION," [",COG20$bin_name,"]")
+COG20 <- cbind(COG20$genome_name, COG20$COG20_FUNCTION) #simplify
+COG20 <- as.data.frame(COG20)
+COG20 <- as.data.frame(table(COG20)) # subset
+
+# "unmelt"
+COG20 <- dcast(data = COG20,formula = V1 ~get("V2"),fun.aggregate = sum,value.var = "Freq")
+COG20 <- COG20 %>% remove_rownames %>% column_to_rownames(var="V1")
+COG20 <- as.matrix(COG20)
+colSums(COG20)
+
+#fix names, inspect results too!
+#write.csv(colnames(COG20), file="new_colname.csv")
+new_colname <- read.csv(file="new_colname.csv")
+colnames(COG20) <- new_colname$new
+
+COG20 <- as.data.frame(COG20)
+# remove (i've write remove in the col)
+COG20 <- COG20 %>% select(-contains("remove"))
+
+library("pheatmap")
+# creating annotation_col
+dic <- read.table("layer-additional-data-all.txt", header = T) # group/strain data
+rownames(dic) <- dic$default
+dic <- dic[order(dic$default),]
+dic$default <- NULL
+colnames(dic) <- c("Cluster","Genus")
+dic$Genus <- NULL
+
+#set colors
+ann_colors = list(
+  Cluster = c(G1="#009999", G2="#00FFDD", G3="#7810D2", G4="#CC92FC", SEMIA_4060="#660066", SEMIA_4080="#9900CC",
+              G5="#B177B1", SEMIA_4064="#6600CC", G6="#3333CC", SEMIA_4085="#FF00C4", SEMIA_4029="#C367F5",
+              G7="#660066", G8="#FF0066", SEMIA_414="#CC00CC", SEMIA_475="#493DCC", G9="#B879B8", SEMIA_4089="#D9348F",
+              G10="#5236CF", G11="#D10096", G12="#5F71B8", G13="#A612A3", G14="#924AFF", SEMIA_4027="#FF0000",
+              G15="#8C8832", '34/80'="#000000", SEMIA_442="#4AAEFF", SEMIA_4084="#157D31"))
+
+#  scale
+COG20 <- scale(COG20)
+
+sort_hclust <- function(...) as.hclust(dendsort(as.dendrogram(...)))
+
+pheatmap(COG20, 
+         annotation_row = dic, 
+         annotation_colors = ann_colors,
+         clustering_callback = sort_hclust,
+         fontsize = 5,
+         fontsize_col = 5,
+         angle_col = "315",
+         treeheight_col = 20,
+         treeheight_row = 100,
+         colorRampPalette(c("#BF0080", "#CE6EAE", "#dddddd", "#6EAE6E", "#008000"))(n = 8)
+         )
+
+dim(COG20)
+
+# gonna check the presence of these genes in 1# bin
+gc_summary_bin1 <- read.delim("/Users/Agrega/Desktop/Pangenoma/ANVIO/Anvio_db/PANGENOME_SEMIA/SUMMARY_Single_Double_Core_Etc/PANGENOME_SEMIA_gene_clusters_summary.txt", sep = "\t")
+unique(gc_summary_bin1$bin_name)
+
+#have to remove the annot between [] modifications i've added to the csv... 
+new_colname$old <- gsub(" \\[Nodulation\\]","",new_colname$old)
+new_colname$old <- gsub(" \\[Fixation\\]","",new_colname$old)
+new_colname$old <- gsub(" \\[Fixation_host_benefit\\]","",new_colname$old)
+new_colname$old <- gsub(" \\[Symbiont_fitness\\]","",new_colname$old)
+
+gextracted <- gc_summary_bin1[gc_summary_bin1$COG20_FUNCTION %in% new_colname$old ,]
+
+gextracted <- cbind(gextracted$bin_name,gextracted$COG20_FUNCTION)
+gextracted <- as.data.frame(gextracted)
+gextracted <- as.data.frame(table(gextracted))
+gextracted <-  subset(gextracted, Freq!=0) # remove 0
+
+# remove FabG [Nodulation] - NAD(P)-dependent dehydrogenase, short-chain alcohol dehydrogenase family (FabG) (PDB:6L1H) (MUITAS entradas!)
+gextracted <-  subset(gextracted, V2!="NAD(P)-dependent dehydrogenase, short-chain alcohol dehydrogenase family (FabG) (PDB:6L1H)") # remove
+View(gextracted)
+
+gextracted$V2 <- as.character(gextracted$V2)
+
+# replace using new_colname$old
+for (i in 1:dim(new_colname)[1]){
+for (j in 1:dim(gextracted)[1]){
+  
+ if(gextracted[j,2] == new_colname$old[i]){
+   gextracted[j,2] <- new_colname$new[i]
+ }
+  }
+}
+
+# just a quick fix
+gextracted$V1 <- gsub("V10", "Variable ~10%", gextracted$V1)
+gextracted$V1 <- gsub("V25", "Variable ~25%", gextracted$V1)
+gextracted$V1 <- gsub("V50", "Variable ~50%", gextracted$V1)
+gextracted$V1 <- gsub("V90", "Variable ~90%", gextracted$V1)
+
+library(ggplot2)
+ggplot(gextracted, aes(x = reorder(V2, +Freq), y = Freq, fill = V2)) + 
+  geom_bar(stat = "identity") + 
+  facet_wrap(~V1,  strip.position = "right", scales = "free_y", ncol = 1) +
+  labs(y = "") + 
+  theme_minimal(8) + scale_y_continuous(position = "right") +
+  theme(axis.text.x = element_text(size = 6, angle = 270, vjust = 0, hjust = 0),
+        legend.position = "none", legend.title = element_blank(), 
+        axis.title.x = element_blank(),
+        plot.title = element_blank())
+
+ggsave(paste0("Figure8.svg"), plot = last_plot(), width = 190, height = 220, units = "mm", limitsize = FALSE) 
+ggsave(paste0("Figure8.png"), plot = last_plot(), width = 190, height = 220, units = "mm", limitsize = FALSE) 
+ggsave(paste0("Figure8.pdf"), plot = last_plot(), width = 190, height = 220, units = "mm", limitsize = FALSE) 
+```
