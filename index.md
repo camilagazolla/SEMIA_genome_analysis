@@ -493,6 +493,99 @@ do
 	anvi-run-pfams -T 40 -c $i.db
 	anvi-run-scg-taxonomy -T 40 -c $i.db
 done
+```
+
+After this, I noticed how bad was the symbiotic genes annotations... Then, I've serched on https://www.uniprot.org/ for:
+
+- NODULATION GENES: nodulation protein AND bacteria AND reviewed:yes
+- NITROGEN FIXATION GENES: gene:nif* OR gene:vnf* OR gene:anf* "nitrogen fixation" AND reviewed:yes
+
+I have downloaded the [Tab-separeted files](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/uniprot-gene_nif_%2BOR%2Bgene_vnf_%2BOR%2Bgene_anf_%2BAND%2Breviewed_yes%2BAND%2B_nitr--.tab) and curated the nodulation genes by hand. For the nitrogen fixation ones:
+
+**On R:**
+```
+fixation_genes <- read.delim("uniprot-gene_nif_+OR+gene_vnf_+OR+gene_anf_+AND+reviewed_yes+AND+_nitr--.tab")
+
+# extract rows with "nitrogen fixation" 
+fixation_genes <- fixation_genes[grepl("nitrogen fixation", fixation_genes$Gene.ontology..biological.process.),]
+
+# format gene names
+fixation_genes$new_gene_names <- fixation_genes$Gene.names
+fixation_genes$new_gene_names <- gsub("^(\\w+) .*","\\1", fixation_genes$new_gene_names)
+
+# filter to remove Uncharacterized and blank
+fixation_genes <- fixation_genes[!grepl("Uncharacterized", fixation_genes$Protein.names),]
+fixation_genes <- fixation_genes[-which(fixation_genes$new_gene_names == ""), ]
+ 
+# select the entry with max lenght for the same gene name
+selected_entries <- data.frame()
+for (i in unique(fixation_genes$new_gene_names)){
+  df <- fixation_genes[grepl(i, fixation_genes$new_gene_names),]
+  selected_entries <- rbind(selected_entries, df[which.max(df$Length),])
+}
+
+write.csv(selected_entries,"selected_genes.csv")
+
+```
+On https://www.uniprot.org/uploadlists/, the canonical and isoforms [.FASTA files](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/uniprot-yourlist_M202110234ABAA9BC7178C81CEBC9459510EDDEA32495DCL.fasta) were downloaded acording to the identifiers.
+
+I have used wild cards to reformt the .FASTA headers quiclky on Notepad++:
+
+FIND: ```>.*GN=(\w+).* ```
+
+REPLACE: ```>\1[Nodulation] OR [Fixation]```
+
+Then, the aa sequences from the .db anvi'o files were extracted.
+
+**On Unix/Linux terminal:**
+```
+mkdir amino-acid-sequences
+for i in `ls *db | awk 'BEGIN{FS=".db"}{print $1}'`
+do
+  anvi-get-sequences-for-gene-calls --get-aa-sequences -c $i.db -o amino-acid-sequences/$i.fa
+done
+```
+
+And BLASTp was used to perform sequence aligment:
+
+**On Unix/Linux terminal:**
+```
+# blastp
+for i in *.fa; do for j in *.fasta; do blastp -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore ppos positive" -query $i -subject $j  -evalue 0.0001 -qcov_hsp_perc 70  >> "${i%.fa}.txt" ; done; done
+
+for i in *.txt; do sort -k1,1 -k12,12gr -k11,11g -k3,3gr $i | sort -u -k1,1 --merge > "bestHits_${i%.fa}"; done
+#The first sort orders the blast output by query name then by the 12th column in descending order (bit score), then by 11th column ascending (e-value).
+#The second sort picks the first line from each query. 
+```
+
+The [bestHist files](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/bestHits_GCF_014207095.txt) were further manipulated on R to match the columns needed for anvi'o.
+
+**On R:**
+```
+setwd(path) # dir with bestHists
+
+arch <- sort(list.files(path, pattern= ".txt", full.names = TRUE))
+
+for (i in arch){
+  name_arch <- gsub("~/amino-acid-sequences/bestHits_","",i)
+  name_arch <- gsub(".txt","",name_arch)
+  df_arch <- read.table(i)
+  class(df_arch)
+  df_arch <- as.data.frame(cbind(df_arch$V1, "blastp", df_arch$V2,df_arch$V2, df_arch$V11))
+  df_arch$V4 <- gsub("_Avin_.*","",df_arch$V4)
+  colnames(df_arch) <- c("gene_callers_id","source","accession","function","e_value")
+  write.table(df_arch,paste0("bestHists_cleaned_",name_arch,".txt"), sep = "\t", quote = FALSE, row.names=FALSE)
+}
+```
+
+Finally, the annot [bestHists_cleaned files](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/bestHists_cleaned_GCF_014207095.txt) were incorporated at the anvi'o .db files, along with the other annotation.
+
+**On Unix/Linux terminal:**
+```
+for i in `ls *db | awk 'BEGIN{FS=".db"}{print $1}'`
+do
+  anvi-import-functions -c $i.db -i bestHists_cleaned_$i.txt
+done
 
 # Generate a genomes storage
 anvi-gen-genomes-storage -e external-genomes-all.txt -o PANGENOME_SEMIA_ALL-GENOMES.db 
