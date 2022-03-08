@@ -273,6 +273,8 @@ lapply(ANIb_coverage_l, function(x) write.table(data.frame(x), 'ANIb_coverage.cs
 
 ## 16S rRNA gene phylogeny using LPSN sequences
 
+PRECISO OLHAR DE NOVO
+
 Can consume 🐡
 
 - [16S gene unaligned_sequences](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/unaligned_sequences.fasta) 
@@ -310,8 +312,8 @@ b3 = 8
 b4 = 10
 b5 = "n"
 
-# Run Gblocks 
-system(paste0("~/Gblocks_0.91b/Gblocks", "aligned_sequences.fasta -t=d", " -b1=", 
+# Run Gs 
+system(paste0("~/Gblocks_0.91b/Gblocks", "aligned_sequences.fasta -t=d", " -b1=",   ### -D ??????????????????????? 
               b1, " -b2=", b2, " -b3=", b3, " -b4=", 
               b4, " -b5=", b5))
               
@@ -452,7 +454,161 @@ tree@phylo[["tip.label"]] <- map[tree@phylo[["tip.label"]]] #replace names
  ggsave("tree_annot.svg", plot = last_plot(), width = 21, height = 21, units = "cm", limitsize = FALSE)
 ```
 
-## Pangenome analysis with anvi'o
+## Housekeeping gene analysis
+
+Performing phylogeny using housekeeping genes data to replace the lack of genomic sequences.
+
+Can consume 🐡
+
+- Genomic protein FASTA (.faa) files
+- [List (.txt) data for type strain acession numbers of nucleotide sequences suitable for NCBI's Batch Entrez](https://github.com/camilagazolla/SEMIA_genome_analysis/blob/gh-pages/atpD_batchentrez.txt)
+
+Can provide 🍣
+
+- [Tree plot with annotation]() 
+
+
+First, use the NCBI's Batch Entrez to download the type strain sequences, which should be obtained from trustable sources. Check each sequence carefully. Second, to extract the genes from genomic protein FASTA sequences:
+
+**On Unix/Linux terminal:**
+```
+cd [Genomic protein FASTA (.faa) files]
+#add filenames to the sequences
+for i in *.faa; do
+awk '/>/{sub(">","&"FILENAME"_");sub(/\.fasta/,x)}1' $i > renamed_$i;
+done
+
+for i in renamed_*.faa; do
+awk '/^>/ { p = ($0 ~ /recombinase RecA/)} p' $i >> recA_genomic.fasta;
+done
+
+for i in renamed_*.faa; do
+awk '/^>/ { p = ($0 ~ /ATP synthase subunit beta/)} p' $i >> atpD_genomic.fasta;
+done
+
+for i in renamed_*.faa; do
+awk '/^>/ { p = ($0 ~ /RNA polymerase subunit beta/)} p' $i >> rpoB_genomic.fasta;
+done
+
+for i in renamed_*.faa; do
+awk '/^>/ { p = ($0 ~ /glutamine synthetase beta-grasp/)} p' $i >> glnII_genomic.fasta;
+done
+
+for i in renamed_*.faa; do
+awk '/^>/ { p = ($0 ~ /type I glutamate--ammonia ligase/)} p' $i >> glnA_genomic.fasta;
+done
+
+
+```
+
+Now, we should merge the files from SEMIA and the type strains in a unique FASTA file. 
+We need to rename the files, to do it we firts simply them using wildcards
+
+**On Notepad++:**
+FIND: (>GCF_...........).*
+REPLACE: \1
+
+FIND: lcl\|
+REPLACE:
+
+FIND: .\d_prot.*
+REPLACE:
+
+After, we can use a dictionary to replace de names. First, write the following to a text archive named "foo.awk"
+
+**On Notepad++:**
+```
+NR == FNR {
+  rep[$1] = $2
+  next
+} 
+
+{
+  for (key in rep)
+    gsub(key, rep[key])
+  print
+}
+```
+
+Then, we  rename the files, align with MUSCLE, concatenate the sequences and use Gblocks.
+
+**On Unix/Linux terminal:**
+```
+# rename
+awk -f foo.awk  dic.txt atpD.fasta > atpD_renamed.fasta
+awk -f foo.awk  dic.txt recA.fasta > recA_renamed.fasta
+awk -f foo.awk  dic.txt recA.fasta > rpoB_renamed.fasta
+awk -f foo.awk  dic.txt recA.fasta > glnII_renamed.fasta
+awk -f foo.awk  dic.txt recA.fasta > glnA_renamed.fasta
+
+# align
+muscle -in atpD_renamed.fasta -out atpD_aligned.fasta
+muscle -in recA_renamed.fasta -out recA_aligned.fasta
+muscle -in rpoB_renamed.fasta -out rpoB_aligned.fasta
+
+# concatenate (maybe I can do it another way... but let it be for now)
+seqkit concat rpoB_aligned.fasta atpD_aligned.fasta recA_aligned.fasta > concat_rpoB_atpD_recA.fasta
+
+```
+
+Inspect the aligment!
+
+```
+library(Biostrings)
+library(phangorn)
+
+root_name <- "Ensifer_alkalisoli_YIC4027"
+
+alignment <- readAAStringSet("concat_rpoB_atpD_recA.fasta")
+
+ntax = length(alignment)
+b1 = floor(ntax*0.5)+1
+b2 = floor(ntax*0.85)
+b3 = 8
+b4 = 10
+b5 = "n"
+
+# Run Gs 
+system(paste0("~/Gblocks_0.91b/Gblocks", " concat_rpoB_atpD_recA.fasta ", " -b1= ", 
+              b1, " -b2= ", b2, " -b3= ", b3, " -b4=", 
+              b4, " -b5=", b5))	     
+	     
+alignment_cleaned <- readAAStringSet("concat_rpoB_atpD_recA.fasta-gb") # Ignore warning message about ignoring invalid one-letter sequence codes
+
+alignment_cleaned_nt <- alignment_cleaned@ranges@width[1] # final number of nucleotides remaining in the alignment
+
+# construct a neighbor-joining tree
+phangAlign <- phyDat(as(alignment_cleaned, "matrix"), type = "AA") 
+dm <- dist.ml(phangAlign) #compute pairwise distances
+tree <- NJ(dm) # construct a neighbor-joining tree
+mt <- modelTest(phangAlign, model="all", tree=tree, G = TRUE, I = TRUE, k = 4) # preper with modelTest
+mt[order(mt$AIC),]
+bestmodel <- mt$Model[which.min(mt$AIC)] # choose best model from the table according to AIC
+write(bestmodel, file= "bestmodel.tab")
+env = attr(mt, "env")
+fitStart = eval(get(bestmodel, env), env) # let R search the table
+
+# fit the maximum likelihood tree using the neighbor-joining tree as a starting point
+mt.pml <- pml(tree, phangAlign, model=bestmodel, k=4)
+mt.pml <- optim.pml(mt.pml,optNni=TRUE,optBf=TRUE,optQ=TRUE,optInv=TRUE,optGamma=TRUE,optEdge=TRUE)
+
+bs = bootstrap.pml(mt.pml, bs=500, optNni=TRUE, multicore = TRUE)
+
+sink("MLparameters.txt")
+print(mt.pml)
+sink()
+
+library(phytools)
+
+tree <- plotBS((reroot(fitStart$tree, (match(root_name,fitStart[["tree"]][["tip.label"]])))), bs, p = 50, type="p") # ROOT ON SELECTED NODE
+
+write.tree(tree, file = "tree.newick", append = FALSE,
+           digits = 10, tree.names = FALSE)
+
+```
+
+
+##Pangenome analysis with anvi'o
 
 The following section is based on the anvi’o version 2.1.0 workflow for microbial pangenomics, avaliable at https://merenlab.org/2016/11/08/pangenomics-v2/
 
