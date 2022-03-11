@@ -337,7 +337,7 @@ fitStart = eval(get(bestmodel, env), env) # let R search the table
 
 # fit the maximum likelihood tree using the neighbor-joining tree as a starting point
 mt.pml <- pml(tree, phangAlign, model=bestmodel, k=4)
-mt.pml <- optim.pml(mt.pml,optNni=TRUE,optBf=TRUE,optQ=TRUE,optInv=TRUE,optGamma=TRUE,optEdge=TRUE)
+############mt.pml <- optim.pml(mt.pml,optNni=TRUE,optBf=TRUE,optQ=TRUE,optInv=TRUE,optGamma=TRUE,optEdge=TRUE)
 
 bs = bootstrap.pml(mt.pml, bs=500, optNni=TRUE, multicore = TRUE)
 
@@ -541,13 +541,15 @@ awk -f foo.awk  dic.txt recA.fasta > rpoB_renamed.fasta
 awk -f foo.awk  dic.txt recA.fasta > glnII_renamed.fasta
 awk -f foo.awk  dic.txt recA.fasta > glnA_renamed.fasta
 
-# align
+# align (if it doesnt work, delete the blanklines in the files)
 muscle -in atpD_renamed.fasta -out atpD_aligned.fasta
 muscle -in recA_renamed.fasta -out recA_aligned.fasta
 muscle -in rpoB_renamed.fasta -out rpoB_aligned.fasta
+muscle -in glnII_renamed.fasta -out glnII_aligned.fasta
+muscle -in glnA_renamed.fasta -out glnA_aligned.fasta
 
 # concatenate (maybe I can do it another way... but let it be for now)
-seqkit concat rpoB_aligned.fasta atpD_aligned.fasta recA_aligned.fasta > concat_rpoB_atpD_recA.fasta
+seqkit concat rpoB_aligned.fasta atpD_aligned.fasta recA_aligned.fasta glnII_aligned.fasta glnA_aligned.fasta > concat_rpoB_atpD_recA_glnII_glnA.fasta
 
 ```
 
@@ -559,7 +561,7 @@ library(phangorn)
 
 root_name <- "Ensifer_alkalisoli_YIC4027"
 
-alignment <- readAAStringSet("concat_rpoB_atpD_recA.fasta")
+alignment <- readAAStringSet("concat_rpoB_atpD_recA_glnII_glnA.fasta")
 
 ntax = length(alignment)
 b1 = floor(ntax*0.5)+1
@@ -569,11 +571,11 @@ b4 = 10
 b5 = "n"
 
 # Run Gs 
-system(paste0("~/Gblocks_0.91b/Gblocks", " concat_rpoB_atpD_recA.fasta ", " -b1= ", 
+system(paste0("~/Gblocks_0.91b/Gblocks", " concat_rpoB_atpD_recA_glnII_glnA.fasta ", " -b1= ", 
               b1, " -b2= ", b2, " -b3= ", b3, " -b4=", 
               b4, " -b5=", b5))	     
 	     
-alignment_cleaned <- readAAStringSet("concat_rpoB_atpD_recA.fasta-gb") # Ignore warning message about ignoring invalid one-letter sequence codes
+alignment_cleaned <- readAAStringSet("concat_rpoB_atpD_recA_glnII_glnA.fasta-gb") # Ignore warning message about ignoring invalid one-letter sequence codes
 
 alignment_cleaned_nt <- alignment_cleaned@ranges@width[1] # final number of nucleotides remaining in the alignment
 
@@ -581,7 +583,7 @@ alignment_cleaned_nt <- alignment_cleaned@ranges@width[1] # final number of nucl
 phangAlign <- phyDat(as(alignment_cleaned, "matrix"), type = "AA") 
 dm <- dist.ml(phangAlign) #compute pairwise distances
 tree <- NJ(dm) # construct a neighbor-joining tree
-mt <- modelTest(phangAlign, model="all", tree=tree, G = TRUE, I = TRUE, k = 4) # preper with modelTest
+mt <- modelTest(phangAlign, model=c("WAG", "JTT", "LG", "Dayhoff", "cpREV", "mtArt", "MtZoa", "mtREV24", "VT", "RtREV", "HIVw", "HIVb", "FLU", "Blosum62", "Dayhoff_DCMut", "JTT_DCMut"), tree=tree, G = TRUE, I = TRUE) # preper with modelTest, for some reason "mtmam" cannot be computed
 mt[order(mt$AIC),]
 bestmodel <- mt$Model[which.min(mt$AIC)] # choose best model from the table according to AIC
 write(bestmodel, file= "bestmodel.tab")
@@ -589,10 +591,13 @@ env = attr(mt, "env")
 fitStart = eval(get(bestmodel, env), env) # let R search the table
 
 # fit the maximum likelihood tree using the neighbor-joining tree as a starting point
-mt.pml <- pml(tree, phangAlign, model=bestmodel, k=4)
-mt.pml <- optim.pml(mt.pml,optNni=TRUE,optBf=TRUE,optQ=TRUE,optInv=TRUE,optGamma=TRUE,optEdge=TRUE)
+#check the best model
+bestmodel
 
-bs = bootstrap.pml(mt.pml, bs=500, optNni=TRUE, multicore = TRUE)
+mt.pml <- pml(tree, phangAlign, model="LG", optGamma=FALSE, optInv=TRUE)
+mt.pml <- optim.pml(mt.pml)
+
+bs = bootstrap.pml(mt.pml, bs=1000, optNni=TRUE, optInv=TRUE, multicore = TRUE)
 
 sink("MLparameters.txt")
 print(mt.pml)
