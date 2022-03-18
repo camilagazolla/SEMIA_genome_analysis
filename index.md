@@ -537,9 +537,9 @@ Then, we  rename the files, align with MUSCLE, concatenate the sequences and use
 # rename
 awk -f foo.awk  dic.txt atpD.fasta > atpD_renamed.fasta
 awk -f foo.awk  dic.txt recA.fasta > recA_renamed.fasta
-awk -f foo.awk  dic.txt recA.fasta > rpoB_renamed.fasta
-awk -f foo.awk  dic.txt recA.fasta > glnII_renamed.fasta
-awk -f foo.awk  dic.txt recA.fasta > glnA_renamed.fasta
+awk -f foo.awk  dic.txt rpoB.fasta > rpoB_renamed.fasta
+awk -f foo.awk  dic.txt glnII.fasta > glnII_renamed.fasta
+awk -f foo.awk  dic.txt glnA.fasta > glnA_renamed.fasta
 
 # align (if it doesnt work, delete the blanklines in the files)
 muscle -in atpD_renamed.fasta -out atpD_aligned.fasta
