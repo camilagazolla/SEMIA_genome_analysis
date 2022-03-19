@@ -495,7 +495,7 @@ awk '/^>/ { p = ($0 ~ /glutamine synthetase beta-grasp/)} p' $i >> glnII_genomic
 done
 
 for i in renamed_*.faa; do
-awk '/^>/ { p = ($0 ~ /type I glutamate--ammonia ligase/)} p' $i >> glnA_genomic.fasta;
+awk '/^>/ { p = ($0 ~ /RNA polymerase subunit alpha /)} p' $i >> rpoA_genomic.fasta;
 done
 
 
@@ -583,7 +583,7 @@ alignment_cleaned_nt <- alignment_cleaned@ranges@width[1] # final number of nucl
 phangAlign <- phyDat(as(alignment_cleaned, "matrix"), type = "AA") 
 dm <- dist.ml(phangAlign) #compute pairwise distances
 tree <- NJ(dm) # construct a neighbor-joining tree
-mt <- modelTest(phangAlign, model=c("WAG", "JTT", "LG", "Dayhoff", "cpREV", "mtArt", "MtZoa", "mtREV24", "VT", "RtREV", "HIVw", "HIVb", "FLU", "Blosum62", "Dayhoff_DCMut", "JTT_DCMut"), tree=tree, G = TRUE, I = TRUE) # preper with modelTest, for some reason "mtmam" cannot be computed
+mt <- modelTest(phangAlign, model=c("WAG", "JTT", "LG", "Dayhoff", "cpREV", "mtArt", "MtZoa", "mtREV24", "VT", "RtREV", "HIVb", "FLU", "Blosum62", "Dayhoff_DCMut", "JTT_DCMut"), tree=tree, G = TRUE, I = TRUE) # preper with modelTest, for some reason "mtmam" and "HIVw" cannot be computed
 mt[order(mt$AIC),]
 bestmodel <- mt$Model[which.min(mt$AIC)] # choose best model from the table according to AIC
 write(bestmodel, file= "bestmodel.tab")
@@ -594,7 +594,9 @@ fitStart = eval(get(bestmodel, env), env) # let R search the table
 #check the best model
 bestmodel
 
-mt.pml <- pml(tree, phangAlign, model="LG", optGamma=FALSE, optInv=TRUE)
+# CHANGE IF NEEDED!!!!!!!!!!!!
+mt.pml <- pml(tree, phangAlign, model="LG", optGamma=TRUE, optInv=TRUE, optNni=TRUE, optQ=TRUE) # CHANGE IF NEEDED!!!!!!!!!!!!
+# CHANGE IF NEEDED!!!!!!!!!!!!
 mt.pml <- optim.pml(mt.pml)
 
 bs = bootstrap.pml(mt.pml, bs=1000, optNni=TRUE, optInv=TRUE, multicore = TRUE)
@@ -605,11 +607,30 @@ sink()
 
 library(phytools)
 
-tree <- plotBS((reroot(fitStart$tree, (match(root_name,fitStart[["tree"]][["tip.label"]])))), bs, p = 50, type="p") # ROOT ON SELECTED NODE
+tree <- plotBS((reroot(fitStart$tree, (match(root_name,fitStart[["tree"]][["tip.label"]])))), bs, type="p") # ROOT ON SELECTED NODE
 
 write.tree(tree, file = "tree.newick", append = FALSE,
            digits = 10, tree.names = FALSE)
 
+library("ggtree")
+library(treeio)
+library(ggplot2)
+
+# read tree
+tree <- treeio::read.newick(file="tree.newick", node.label='support')
+
+# annotate and save tree plot
+root <- rootnode(tree) 
+
+# plot cladogram rooted on external group
+ggtree(tree, ladderize=T, layout='rectangular', size=0.2, branch.length = "none")+ 
+  geom_tiplab(size=2, fontface="italic")+
+  theme(legend.position = c(1,-1)) + 
+  # geom_point2(aes(subset= !isTip & node != root & support > 70), 
+  #             shape=21, size=1, color = "black", fill = "black")+
+  xlim(0,150) + geom_label2(aes(label=support, 
+                                subset = !is.na(as.numeric(support)) & as.numeric(support) > 70 &!isTip & node != root ), size =2, label.size=0,
+                            nudge_x = 1,   label.padding = unit(0.0, "lines"))
 ```
 
 
